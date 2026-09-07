@@ -172,6 +172,66 @@ export async function recordHumanEdit(env: Env, articleId: string, body: string,
   return { articleId, humanEdited: true, slug: a.slug };
 }
 
+/* --------------------------------------------------------------- the queue */
+
+/* What is waiting for a person, and what each one needs from them.
+ *
+ * Previewing a draft needs its id, and until this existed the only way to get
+ * one was a raw SQL query — which made the review flow the least usable part of
+ * a system whose whole safety story is that a human reviews things.
+ *
+ * The editorial numbers are surfaced here rather than left inside the draft so
+ * the queue can be triaged without opening every piece: a draft with unsupported
+ * claims or a duplication flag is the one to read first. */
+export async function listQueue(env: Env) {
+  const { results } = await env.DB.prepare(
+    `SELECT id, writer, writer_version, title, standfirst, status, confidence,
+            belief_effect, sources_considered, sources_cited, human_edited,
+            editorial_findings, created_at, updated_at
+       FROM articles
+      WHERE status IN ('awaiting_human_approval', 'revising', 'drafting')
+      ORDER BY CASE status WHEN 'awaiting_human_approval' THEN 0
+                           WHEN 'revising' THEN 1 ELSE 2 END,
+               created_at DESC`).all<any>();
+
+  const items = (results ?? []).map((a: any) => {
+    let f: any = {};
+    try { f = JSON.parse(a.editorial_findings ?? '{}'); } catch { /* older or partial row */ }
+    return {
+      id: a.id,
+      writer: a.writer,
+      writerVersion: a.writer_version,
+      title: a.title,
+      standfirst: a.standfirst || null,
+      status: a.status,
+      confidence: a.confidence,
+      beliefEffect: a.belief_effect,
+      sources: { considered: a.sources_considered, cited: a.sources_cited },
+      humanEdited: !!a.human_edited,
+      /* The three things worth knowing before deciding whether to read it. */
+      needsAttention: {
+        unsupportedClaims: (f.unsupported ?? []).length,
+        uncertainClaims: (f.uncertain ?? []).length,
+        duplicationFlagged: !!f.duplication?.flagged,
+      },
+      unsupported: f.unsupported ?? [],
+      writerChangeNote: f.changeNote ?? null,
+      createdAt: a.created_at,
+      updatedAt: a.updated_at,
+    };
+  });
+
+  return {
+    awaitingApproval: items.filter(i => i.status === 'awaiting_human_approval').length,
+    returnedForRevision: items.filter(i => i.status === 'revising').length,
+    stillDrafting: items.filter(i => i.status === 'drafting').length,
+    items,
+    /* Nothing waiting is the normal state, and it is not an empty result to be
+       apologised for. */
+    note: items.length ? undefined : 'Nothing is waiting for you. That is the usual state.',
+  };
+}
+
 /* ------------------------------------------------------------------- status */
 
 export async function systemStatus(env: Env) {

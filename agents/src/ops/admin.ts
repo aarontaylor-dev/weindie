@@ -126,6 +126,9 @@ export async function handleAdmin(req: Request, env: Env, path: string): Promise
         }
         return json(await ops.recordHumanEdit(env, body.articleId, body.body, body.note));
 
+      case '/admin/queue':
+        return json(await ops.listQueue(env));
+
       case '/admin/status':
         return json(await ops.systemStatus(env));
 

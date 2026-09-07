@@ -485,6 +485,7 @@ A=(-H "Authorization: Bearer $T" -H 'content-type: application/json')
 | --- | --- |
 | Seed writers and sources | `curl -X POST "${A[@]}" $B/admin/seed` |
 | System status | `curl -X POST "${A[@]}" $B/admin/status` |
+| What is waiting for you | `curl -X POST "${A[@]}" $B/admin/queue` |
 | `triggerRadar()` | `curl -X POST "${A[@]}" $B/admin/radar` |
 | `runWriterReading(w)` | `curl -X POST "${A[@]}" -d '{"writer":"mara"}' $B/admin/reading` |
 | `inspectNotebook(w)` | `curl -X POST "${A[@]}" -d '{"writer":"vale"}' $B/admin/notebook` |
@@ -498,7 +499,17 @@ A=(-H "Authorization: Bearer $T" -H 'content-type: application/json')
 
 ### Reviewing a draft
 
-Drafts wait at `awaiting_human_approval`. The preview renders one **through the
+`/admin/queue` is where a review starts. It lists everything waiting — drafts at
+`awaiting_human_approval`, anything returned for revision, anything still being
+written — with the id each other operation needs, and the three numbers worth
+knowing before deciding what to read first:
+
+    needsAttention: { unsupportedClaims, uncertainClaims, duplicationFlagged }
+
+A draft with unsupported claims or a duplication flag is the one to open. An
+empty queue is the normal state and says so rather than returning a bare list.
+
+The preview then renders one **through the
 same template a reader would get**, provenance panel and all, plus a banner
 carrying the editorial findings — reviewing a different rendering of the text
 would be reviewing the wrong thing:
