@@ -126,6 +126,12 @@ export async function handleAdmin(req: Request, env: Env, path: string): Promise
         }
         return json(await ops.recordHumanEdit(env, body.articleId, body.body, body.note));
 
+      case '/admin/article/voice':
+        return json(await ops.voiceCheckArticle(
+          env, body.articleId,
+          isWriterId(body.writer) ? body.writer : undefined,
+          typeof body.body === 'string' ? body.body : undefined));
+
       case '/admin/queue':
         return json(await ops.listQueue(env));
 

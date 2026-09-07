@@ -18,6 +18,7 @@ import { ARTICLE, type WriterId, isWriterId } from '../config';
 import { identity, systemPrompt, EDITOR_PROMPT } from '../writers/identities';
 import { asSourceBlock } from '../radar/sanitise';
 import { generate, parseJson } from '../ai/generate';
+import { voiceCheck, asBrief, type VoiceFinding } from '../editorial/voice';
 import { nowIso, uid, slugify } from '../util';
 
 export interface ArticleParams { writer: WriterId; thoughtId: string }
@@ -276,6 +277,12 @@ State it as a case, not as advice, and do not suggest how to answer it.`,
       return res.text.slice(0, 2000);
     });
 
+    /* 9b — does the draft follow the writer's own rules? ------------------- *
+     * Counted where it can be counted, judged only where judgement is needed,
+     * and reported rather than corrected — like every other editorial stage. */
+    const voice = await step.do('voice check', RETRY, async () =>
+      voiceCheck(env, me, draft.body, workflowId));
+
     /* 10/11 — findings go back to the writer; the writer revises ----------- */
     const revised = await step.do('writer revises', RETRY, async () => {
       const findings = [
@@ -285,6 +292,7 @@ State it as a case, not as advice, and do not suggest how to answer it.`,
         claims.uncertain.length
           ? `Only partly supported:\n${claims.uncertain.map(c => `- ${c.claim}`).join('\n')}`
           : '',
+        asBrief(voice),
         `The strongest objection to your argument:\n${counter}`,
       ].filter(Boolean).join('\n\n');
 
@@ -308,17 +316,30 @@ Then answer the objection — in the piece, in your voice. You may concede it, y
 show why it does not hold, or you may say it is the strongest reason you might be
 wrong and leave it standing. You are not required to win.
 
+Then the voice findings, if there are any. You wrote those rules. Fix the places the
+draft departs from them — or say the rule was wrong, and why. Deciding a rule of yours
+no longer serves you is a real answer and a more interesting one than compliance; what
+is not acceptable is breaking it without noticing. The standing rules are not yours to
+overturn, but you may explain why a passage does not really breach one.
+
 Keep your own argument. This is your piece.
 
-{"body":"the revised essay","changeNote":"one sentence on what you changed and why","confidence":"low|medium|high"}` }],
+{"body":"the revised essay","changeNote":"one sentence on what you changed and why","voiceResponse":"what you did about the voice findings, or why you disagree with them — omit if there were none","confidence":"low|medium|high"}` }],
       });
       const r = parseJson<any>(res.text);
       return {
         body: String(r?.body ?? draft.body).slice(0, 20000),
         changeNote: String(r?.changeNote ?? '').slice(0, 400),
+        voiceResponse: r?.voiceResponse ? String(r.voiceResponse).slice(0, 600) : null,
         confidence: ['low', 'medium', 'high'].includes(r?.confidence) ? r.confidence : draft.confidence,
       };
     });
+
+    /* 11b — did the revision actually fix it? Counted again on the final text,
+       because "the writer said it addressed the findings" and "the findings are
+       gone" are different claims, and only one of them is checkable. */
+    const voiceAfter = await step.do('voice recheck', RETRY, async () =>
+      voiceCheck(env, me, revised.body, workflowId));
 
     /* 12 — duplication check against what this site has already published --- */
     const duplication = await step.do('duplication check', RETRY, async () => {
@@ -368,6 +389,12 @@ Keep your own argument. This is your piece.
           unsupported: claims.unsupported.map(c => c.claim),
           uncertain: claims.uncertain.map(c => c.claim),
           changeNote: revised.changeNote,
+          voice: {
+            beforeRevision: voice.findings,
+            afterRevision: voiceAfter.findings,
+            resolved: voice.findings.length - voiceAfter.findings.length,
+            writerResponse: revised.voiceResponse,
+          },
           duplication,
         }),
         claims.citedCount, at, articleId,
@@ -391,6 +418,7 @@ Keep your own argument. This is your piece.
       sourcesCited: claims.citedCount,
       claims: claims.all.length,
       unsupported: claims.unsupported.length,
+      voiceDepartures: { before: voice.findings.length, after: voiceAfter.findings.length },
       duplicationFlagged: duplication.flagged,
     };
   }

@@ -172,9 +172,60 @@ Each file carries frontmatter (`name`, `id`, `role`, `version`, `model`,
 metaphor maximum, one genuine concession per piece, never use these nine words*.
 Adjectives produce one model in six hats; constraints produce six writers.
 
+### Voice compliance
+
+The identity files were guidance a model could quietly ignore, with nothing
+measuring how often it did — which made "each writer has a distinct voice" an
+untested claim. The article workflow now checks the draft against the writer's
+own **Voice rules** and against the standing house rules, before and after the
+revision. On the same principle as everything else here, it reports and never
+rewrites.
+
+**Counted, not judged.** A model asked "is the average sentence under fifteen
+words?" will guess, confidently. So word limits, sentence length and banned
+phrases are checked in code, exactly. Three line forms inside `## Voice rules`
+are parsed, and they are the same lines the model is given — not a duplicate in
+frontmatter, which would drift:
+
+    - Hard limit: 700 words...          } the limit
+    - Word limit: 900 words...          }
+    - Average sentence under 15 words.
+    - Never use these words: a, b, c
+
+**Judged, where judgement is needed.** Everything else in the section — whether
+the piece opened concretely, whether it conceded anything, whether it ended on a
+call to action it was told never to make — goes to a model, with two guards: it
+must quote the passage, and any quote that does not appear in the draft is
+dropped. Findings that duplicate a counted rule are dropped too.
+
+**The writer answers.** Findings go into the revision brief alongside the
+factual ones, framed as: *you wrote those rules — fix it, or say the rule was
+wrong and why.* A writer deciding one of its own rules no longer serves it is a
+real answer, and a more interesting one than compliance. What is not acceptable
+is breaking a rule without noticing. The check runs again on the final text, so
+`resolved` reflects what the revision actually fixed rather than what the writer
+said it fixed, and `/admin/queue` reports only the departures still present.
+
+Check any article, or any text, without changing anything:
+
+```bash
+curl -X POST "${A[@]}" -d '{"articleId":"art_…"}'          $B/admin/article/voice
+curl -X POST "${A[@]}" -d '{"writer":"soren","body":"…"}'  $B/admin/article/voice
+```
+
+The second form is how you tune an identity file, and how you confirm the check
+still fires — which a check that only ever returns "no findings" cannot
+demonstrate about itself.
+
+**Known limit.** The counted half is exact. The judged half is a model's
+opinion: on the test set it caught rules like *no numbered takeaways* and *no
+second-person imperative* precisely, and it did **not** catch a draft that
+summarised its source, which is the violation that prompted this. Treat a clean
+judged result as weak evidence, not proof.
+
 ### Versioning
 
-Every article records `writer_version` — `mara@0.1` — and the version comes from
+Every article records `writer_version` — `mara@0.2` — and the version comes from
 the identity file's frontmatter. Change a writer's worldview, bump the version
 in the same commit, and every article ever published says which version wrote
 it. The version is displayed on the article page.
@@ -283,12 +334,12 @@ Runs when a thought reaches `ready_to_write`.
 7. Classify: fact / interpretation / prediction / speculation / opinion
 8. Verify facts against the sources; name the unsupported ones
 9. Construct the strongest honest counterargument
-10. Return the findings **to the writer**
-11. The writer revises its own argument
-12. Duplication check against everything already on the site
-13. Final draft
-14. Store provenance
-15. `awaiting_human_approval`
+10. Check the draft against the writer's own voice rules and the house rules
+11. Return all the findings **to the writer**
+12. The writer revises its own argument, and answers the voice findings
+13. Re-check the voice rules against the revised text
+14. Duplication check against everything already on the site
+15. Final draft, provenance, `awaiting_human_approval`
 
 **The editor never rewrites.** It reports; the writer decides. An editorial stage
 that rewrote would be a house style with extra steps, and the six voices would
@@ -494,6 +545,7 @@ A=(-H "Authorization: Bearer $T" -H 'content-type: application/json')
 | `approveArticle(id)` | `curl -X POST "${A[@]}" -d '{"articleId":"art_…","note":"…"}' $B/admin/article/approve` |
 | `rejectArticle(id)` | `curl -X POST "${A[@]}" -d '{"articleId":"art_…","note":"…"}' $B/admin/article/reject` |
 | Preview a draft | `curl -X POST "${A[@]}" -d '{"articleId":"art_…"}' $B/admin/article/preview > draft.html` |
+| Check voice compliance | `curl -X POST "${A[@]}" -d '{"articleId":"art_…"}' $B/admin/article/voice` |
 | Return for revision | `curl -X POST "${A[@]}" -d '{"articleId":"art_…","note":"…","factual":true}' $B/admin/article/revise` |
 | Record a human edit | `curl -X POST "${A[@]}" -d '{"articleId":"art_…","body":"…","note":"…"}' $B/admin/article/edit` |
 

@@ -38,6 +38,46 @@ export interface Identity {
   /* Radar topic tags this writer is drawn to. Declared in the identity file so
      "what Mara notices" is inspectable in Git alongside who Mara is. */
   topics: string[];
+  /* The countable half of the voice rules, read out of the same lines the model
+     is given. Not a second copy in frontmatter: a duplicate would drift, and
+     then the rule a writer is told and the rule it is checked against would
+     quietly differ. */
+  constraints: Constraints;
+}
+
+export interface Constraints {
+  maxWords?: number;
+  hardLimit: boolean;          // "Hard limit" vs "Word limit" — same check, different tone
+  maxAvgSentenceWords?: number;
+  bannedPhrases: string[];
+}
+
+/* Three line forms inside "## Voice rules" that a parser and a human read the
+   same way:
+     - Hard limit: 700 words...
+     - Word limit: 900 words...
+     - Average sentence under 15 words.
+     - Never use these words: a, b, c
+   Anything else in that section is prose, and is judged rather than counted. */
+function parseConstraints(voiceRules: string): Constraints {
+  const hard = /^- Hard limit:\s*(\d+)\s*words/mi.exec(voiceRules);
+  const soft = /^- Word limit:\s*(\d+)\s*words/mi.exec(voiceRules);
+  const avg = /^- Average sentence under\s*(\d+)\s*words/mi.exec(voiceRules);
+
+  const banned: string[] = [];
+  for (const m of voiceRules.matchAll(/^- Never use these words:\s*(.+)$/gmi)) {
+    for (const w of m[1].split(',')) {
+      const t = w.trim().replace(/[."']+$/, '').replace(/^["']+/, '');
+      if (t) banned.push(t);
+    }
+  }
+
+  return {
+    maxWords: hard ? Number(hard[1]) : soft ? Number(soft[1]) : undefined,
+    hardLimit: !!hard,
+    maxAvgSentenceWords: avg ? Number(avg[1]) : undefined,
+    bannedPhrases: banned,
+  };
 }
 
 function parse(id: WriterId, raw: string): Identity {
@@ -81,6 +121,7 @@ function parse(id: WriterId, raw: string): Identity {
       .map(s => s.replace(/^- /, '').replace(/\s*\n\s*/g, ' ').trim()),
     interests: bullets(sections['interests']),
     topics: (() => { try { return JSON.parse(fm.topics || '[]'); } catch { return []; } })(),
+    constraints: parseConstraints(sections['voice rules'] || ''),
   };
 }
 

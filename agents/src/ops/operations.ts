@@ -11,6 +11,7 @@ import { WRITER_IDS, type WriterId, isWriterId } from '../config';
 import { allIdentities, identity } from '../writers/identities';
 import { spendThisMonth } from '../ai/generate';
 import { nowIso, uid, isSafeId } from '../util';
+import { voiceCheck } from '../editorial/voice';
 import sourceList from '../../sources/sources.json';
 
 /* ------------------------------------------------------------------- seeding */
@@ -172,6 +173,36 @@ export async function recordHumanEdit(env: Env, articleId: string, body: string,
   return { articleId, humanEdited: true, slug: a.slug };
 }
 
+/* Run the voice check over an article that already exists, changing nothing.
+   Useful for asking the question retrospectively — including of pieces written
+   before the check existed. */
+export async function voiceCheckArticle(
+  env: Env, articleId?: string, writer?: WriterId, body?: string,
+) {
+  /* Either check a stored article, or check arbitrary text against a writer's
+     rules. The second form is how you tune an identity file — and how you
+     confirm the check still fires, which a check that only ever returns "no
+     findings" cannot demonstrate about itself. */
+  if (body && isWriterId(writer)) {
+    return {
+      articleId: null, writer, title: null, status: 'ad-hoc',
+      identityVersionNow: identity(writer).versioned,
+      ...(await voiceCheck(env, identity(writer), body.slice(0, 20000))),
+    };
+  }
+  if (!isSafeId(articleId)) throw new Error('pass articleId, or writer and body');
+  const a = await env.DB.prepare(
+    `SELECT id, writer, title, body, status FROM articles WHERE id = ?`).bind(articleId).first<any>();
+  if (!a) throw new Error('article not found');
+  if (!isWriterId(a.writer)) throw new Error('unknown writer on article');
+  const v = await voiceCheck(env, identity(a.writer), a.body ?? '');
+  return {
+    articleId: a.id, writer: a.writer, title: a.title, status: a.status,
+    identityVersionNow: identity(a.writer).versioned,
+    ...v,
+  };
+}
+
 /* --------------------------------------------------------------- the queue */
 
 /* What is waiting for a person, and what each one needs from them.
@@ -212,10 +243,20 @@ export async function listQueue(env: Env) {
       needsAttention: {
         unsupportedClaims: (f.unsupported ?? []).length,
         uncertainClaims: (f.uncertain ?? []).length,
+        /* Departures still present in the final text, not the ones the writer
+           already fixed. A number here means the writer chose to leave it. */
+        voiceDepartures: (f.voice?.afterRevision ?? []).length,
         duplicationFlagged: !!f.duplication?.flagged,
       },
       unsupported: f.unsupported ?? [],
       writerChangeNote: f.changeNote ?? null,
+      voice: f.voice ? {
+        found: (f.voice.beforeRevision ?? []).length,
+        remaining: (f.voice.afterRevision ?? []).length,
+        resolved: f.voice.resolved ?? 0,
+        writerResponse: f.voice.writerResponse ?? null,
+        stillDeparting: (f.voice.afterRevision ?? []).map((x: any) => x.rule),
+      } : null,
       createdAt: a.created_at,
       updatedAt: a.updated_at,
     };
