@@ -1,0 +1,71 @@
+/*
+ * weindie-agents — one Worker, one codebase.
+ *
+ * Everything here is additive. It creates nothing on weindie.com: no route, no
+ * DNS record, no change to the `weindie-site` Pages project. The preview lives
+ * on workers.dev until a human decides otherwise.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "weindie-agents",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+
+  /* Fonts and stylesheet, copied out of the main site by prepare-assets.mjs so
+     the preview renders in WeIndie's own type without a third-party request. */
+  "assets": { "directory": ".assets", "binding": "ASSETS" },
+
+  "vars": {
+    /* The kill switch. "false" stops Radar and every scheduled reading session.
+       Published pages keep serving; explicit human-triggered operations still
+       work, because a human pressing a button is not an autonomous act. */
+    "AGENTS_ENABLED": "false",
+    "ENVIRONMENT": "preview",
+    "AI_GATEWAY_ID": "weindie-ai",
+    /* Software ceiling, enforced in generate() before every call. The AI Gateway
+       spend rules are the outer wall; this is the inner one. */
+    "MONTHLY_BUDGET_USD": "30",
+    "PER_AGENT_BUDGET_USD": "4",
+    /* Paid frontier providers stay off until a human sets a key AND flips this. */
+    "EXTERNAL_PROVIDERS_ENABLED": "false",
+    "SITE_ORIGIN": "https://weindie.com"
+  },
+
+  "ai": { "binding": "AI" },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "weindie-writers",
+      "database_id": "8cd30dbf-707c-4678-bcea-4ea0cf574473",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  /* One Durable Object class, one instance per writer. SQLite-backed, which is
+     also the only kind the Workers Free plan allows. */
+  "durable_objects": {
+    "bindings": [{ "name": "WRITER", "class_name": "WriterAgent" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["WriterAgent"] }],
+
+  "workflows": [
+    { "name": "weindie-radar", "binding": "RADAR", "class_name": "RadarWorkflow" },
+    { "name": "weindie-reading", "binding": "READING", "class_name": "ReadingWorkflow" },
+    { "name": "weindie-article", "binding": "ARTICLE", "class_name": "ArticleWorkflow" }
+  ],
+
+  /* Five crons is the Free-plan ceiling. Two Radar sweeps, three reading waves
+     of two writers each. What each cron does is decided in src/config.ts, which
+     is the single place the schedule is written down. */
+  "triggers": {
+    "crons": ["0 6 * * *", "0 17 * * *", "20 7 * * *", "40 9 * * *", "10 12 * * *"]
+  },
+
+  /* Writer identities are Markdown in the repository, imported as text so the
+     file a human reads in Git is literally the file the model is given. */
+  "rules": [{ "type": "Text", "globs": ["**/*.md"], "fallthrough": true }]
+}

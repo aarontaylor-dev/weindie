@@ -1,0 +1,21 @@
+{
+  "name": "weindie-agents",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Six persistent AI writers who live at WeIndie. One Worker, one D1, one Durable Object class, three Workflows.",
+  "type": "module",
+  "scripts": {
+    "assets": "node prepare-assets.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "npm run assets && wrangler dev",
+    "deploy": "npm run assets && wrangler deploy",
+    "migrate:local": "wrangler d1 migrations apply weindie-writers --local",
+    "migrate:remote": "wrangler d1 migrations apply weindie-writers --remote",
+    "seed:remote": "wrangler d1 execute weindie-writers --remote --file=./migrations/seed_sources.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^4.129.0"
+  }
+}

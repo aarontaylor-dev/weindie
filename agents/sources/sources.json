@@ -1,0 +1,107 @@
+{
+  "note": "The curated list Radar reads. Small on purpose: first-party announcements and independent writing, no aggregators, no scraping of arbitrary pages. Every feed here was checked to resolve before it was added. Edit this file and re-run the admin seed-sources operation to change what the writers can see.",
+  "sources": [
+    {
+      "id": "cloudflare-blog", "name": "Cloudflare Blog",
+      "url": "https://blog.cloudflare.com/", "feed_url": "https://blog.cloudflare.com/rss/",
+      "kind": "feed", "publisher": "Cloudflare", "first_party": true,
+      "topics": ["developer tools", "platform changes", "agents", "edge"]
+    },
+    {
+      "id": "cloudflare-changelog", "name": "Cloudflare Developer Changelog",
+      "url": "https://developers.cloudflare.com/changelog/", "feed_url": "https://developers.cloudflare.com/changelog/rss.xml",
+      "kind": "changelog", "publisher": "Cloudflare", "first_party": true,
+      "topics": ["platform changes", "developer tools"]
+    },
+    {
+      "id": "openai-news", "name": "OpenAI News",
+      "url": "https://openai.com/news/", "feed_url": "https://openai.com/news/rss.xml",
+      "kind": "feed", "publisher": "OpenAI", "first_party": true,
+      "topics": ["model releases", "agents", "AI research"]
+    },
+    {
+      "id": "deepmind-blog", "name": "Google DeepMind Blog",
+      "url": "https://deepmind.google/discover/blog/", "feed_url": "https://deepmind.google/blog/rss.xml",
+      "kind": "feed", "publisher": "Google DeepMind", "first_party": true,
+      "topics": ["AI research", "model releases"]
+    },
+    {
+      "id": "google-ai-blog", "name": "Google — AI",
+      "url": "https://blog.google/technology/ai/", "feed_url": "https://blog.google/technology/ai/rss/",
+      "kind": "feed", "publisher": "Google", "first_party": true,
+      "topics": ["model releases", "AI products"]
+    },
+    {
+      "id": "huggingface-blog", "name": "Hugging Face Blog",
+      "url": "https://huggingface.co/blog", "feed_url": "https://huggingface.co/blog/feed.xml",
+      "kind": "feed", "publisher": "Hugging Face", "first_party": true,
+      "topics": ["open source", "open weights", "AI research"]
+    },
+    {
+      "id": "github-blog", "name": "The GitHub Blog",
+      "url": "https://github.blog/", "feed_url": "https://github.blog/feed/",
+      "kind": "feed", "publisher": "GitHub", "first_party": true,
+      "topics": ["developer tools", "coding agents", "open source"]
+    },
+    {
+      "id": "simonwillison", "name": "Simon Willison's Weblog",
+      "url": "https://simonwillison.net/", "feed_url": "https://simonwillison.net/atom/everything/",
+      "kind": "feed", "publisher": "Simon Willison", "first_party": false,
+      "topics": ["agents", "vibe coding", "AI failures", "developer tools", "personal software"]
+    },
+    {
+      "id": "inkandswitch", "name": "Ink & Switch",
+      "url": "https://www.inkandswitch.com/", "feed_url": "https://www.inkandswitch.com/index.xml",
+      "kind": "feed", "publisher": "Ink & Switch", "first_party": false,
+      "topics": ["personal software", "local-first", "new interaction models", "ownership"]
+    },
+    {
+      "id": "martinfowler", "name": "martinfowler.com",
+      "url": "https://martinfowler.com/", "feed_url": "https://martinfowler.com/feed.atom",
+      "kind": "feed", "publisher": "Martin Fowler", "first_party": false,
+      "topics": ["human/AI collaboration", "developer tools", "software design"]
+    },
+    {
+      "id": "jvns", "name": "Julia Evans",
+      "url": "https://jvns.ca/", "feed_url": "https://jvns.ca/atom.xml",
+      "kind": "feed", "publisher": "Julia Evans", "first_party": false,
+      "topics": ["developer tools", "independent technology", "learning"]
+    },
+    {
+      "id": "lethain", "name": "Irrational Exuberance",
+      "url": "https://lethain.com/", "feed_url": "https://lethain.com/feeds/",
+      "kind": "feed", "publisher": "Will Larson", "first_party": false,
+      "topics": ["small-team leverage", "engineering organisations", "human/AI collaboration"]
+    },
+    {
+      "id": "karpathy", "name": "Andrej Karpathy",
+      "url": "https://karpathy.bearblog.dev/", "feed_url": "https://karpathy.bearblog.dev/feed/",
+      "kind": "feed", "publisher": "Andrej Karpathy", "first_party": false,
+      "topics": ["vibe coding", "AI research", "autonomous software"]
+    },
+    {
+      "id": "404media", "name": "404 Media",
+      "url": "https://www.404media.co/", "feed_url": "https://www.404media.co/rss/",
+      "kind": "feed", "publisher": "404 Media", "first_party": false,
+      "topics": ["AI failures", "hidden labour", "slop", "incentives"]
+    },
+    {
+      "id": "oreilly-radar", "name": "O'Reilly Radar",
+      "url": "https://www.oreilly.com/radar/", "feed_url": "https://www.oreilly.com/radar/feed/index.xml",
+      "kind": "feed", "publisher": "O'Reilly", "first_party": false,
+      "topics": ["human/AI collaboration", "developer tools", "AI practice"]
+    },
+    {
+      "id": "arxiv-cs-ai", "name": "arXiv cs.AI",
+      "url": "https://arxiv.org/list/cs.AI/recent", "feed_url": "https://arxiv.org/rss/cs.AI",
+      "kind": "research", "publisher": "arXiv", "first_party": true,
+      "topics": ["AI research", "agents", "autonomous software"]
+    },
+    {
+      "id": "arxiv-cs-hc", "name": "arXiv cs.HC",
+      "url": "https://arxiv.org/list/cs.HC/recent", "feed_url": "https://arxiv.org/rss/cs.HC",
+      "kind": "research", "publisher": "arXiv", "first_party": true,
+      "topics": ["AI research", "human/AI collaboration", "new interaction models"]
+    }
+  ]
+}
