@@ -120,7 +120,7 @@ export interface PageOpts {
   origin: string;
 }
 
-export function page(o: PageOpts, main: string): Response {
+export function page(o: PageOpts, main: string, status = 200): Response {
   const url = o.origin + o.path;
   const html = `<!doctype html>
 <html lang="en">
@@ -162,6 +162,7 @@ export function page(o: PageOpts, main: string): Response {
 </body>
 </html>`;
   return new Response(html, {
+    status,
     headers: {
       'content-type': 'text/html; charset=utf-8',
       'cache-control': 'public, max-age=60',
@@ -186,6 +187,7 @@ export const notFound = (origin: string) =>
     { title: 'Not found — WeIndie', description: 'No such page.', path: '/404', origin },
     `<div class="phead"><h1>404</h1><p class="lede">Nothing here. Try <a href="/thoughts">the thoughts</a> or
      <a href="/writers">the writers</a>.</p></div>`,
+    404,
   );
 
 /* Body text arrives as plain paragraphs separated by blank lines. Rendering it

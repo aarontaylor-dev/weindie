@@ -14,6 +14,8 @@ import type { Env } from '../env';
 import { tokenMatches } from '../util';
 import { isWriterId } from '../config';
 import * as ops from './operations';
+import { draftPreview } from '../site/pages';
+import { isSafeId } from '../util';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body, null, 2), {
@@ -93,8 +95,23 @@ export async function handleAdmin(req: Request, env: Env, path: string): Promise
       case '/admin/article/start':
         return json(await ops.startArticle(env, needWriter(), body.thoughtId));
 
+      /* Preview a draft exactly as a reader would see it. POST like every other
+         admin operation, so there is still no public route that can reach an
+         unapproved article:
+           curl -X POST -H "Authorization: Bearer $T" -H 'content-type: application/json' \
+             -d '{"articleId":"art_..."}' $B/admin/article/preview > draft.html */
+      case '/admin/article/preview': {
+        if (!isSafeId(body.articleId)) return json({ error: 'bad article id' }, 400);
+        const res = await draftPreview(env, req, body.articleId);
+        return res ?? json({ error: 'article not found' }, 404);
+      }
+
       case '/admin/article/approve':
-        return json(await ops.approveArticle(env, body.articleId, body.note, body.edited === true));
+        return json(await ops.approveArticle(
+          env, body.articleId, body.note, body.edited === true,
+          /* Only a plain approval counts as a human one. A caller must name a
+             different actor deliberately, and the article page then says so. */
+          typeof body.actor === 'string' && body.actor !== 'human' ? body.actor.slice(0, 40) : 'human'));
 
       case '/admin/article/reject':
         return json(await ops.rejectArticle(env, body.articleId, body.note));

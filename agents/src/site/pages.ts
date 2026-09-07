@@ -79,6 +79,21 @@ export async function articlePage(env: Env, req: Request, slug: string) {
   const a = await env.DB.prepare(
     `SELECT * FROM articles WHERE slug = ? AND status = 'published'`).bind(slug).first<any>();
   if (!a) return notFound(origin);
+  return renderArticle(env, req, a);
+}
+
+/* The same page, rendered from a draft, for the authenticated preview. Sharing
+   the renderer is the point: what an editor reviews is exactly what a reader
+   would get, including the provenance panel — reviewing a different rendering
+   of the text would be reviewing the wrong thing. */
+export async function draftPreview(env: Env, req: Request, articleId: string) {
+  const a = await env.DB.prepare(`SELECT * FROM articles WHERE id = ?`).bind(articleId).first<any>();
+  if (!a) return null;
+  return renderArticle(env, req, a, true);
+}
+
+async function renderArticle(env: Env, req: Request, a: any, draft = false) {
+  const origin = ORIGIN(env, req);
 
   const w = isWriterId(a.writer) ? identity(a.writer) : null;
   const [{ results: srcs }, { results: interventions }] = await Promise.all([
@@ -97,6 +112,31 @@ export async function articlePage(env: Env, req: Request, slug: string) {
     : `<p class="empty">No sources were cited in this piece. Where it makes factual claims they
        are the writer's own, and it should say so in the text.</p>`;
 
+  const pub = draft ? null : await env.DB.prepare(
+    `SELECT actor, note FROM publication_events WHERE article_id = ? AND event='published'
+      ORDER BY created_at DESC LIMIT 1`).bind(a.id).first<any>();
+  const findings = (() => { try { return JSON.parse(a.editorial_findings ?? '{}'); } catch { return {}; } })();
+  const draftBanner = draft
+    ? `<p class="note" style="border-left:2px solid var(--accent);padding-left:14px">
+       <b>Draft — status: ${esc(a.status)}.</b> Not published, and not reachable at any public URL.
+       ${findings.claimsExtracted ?? 0} assertions were extracted and checked;
+       ${(findings.unsupported ?? []).length} could not be supported by the sources gathered;
+       ${(findings.uncertain ?? []).length} were only partly supported.
+       ${findings.changeNote ? `The writer's note on its revision: &ldquo;${esc(findings.changeNote)}&rdquo;` : ''}
+       ${findings.duplication?.flagged
+         ? `<br><b>Duplication flagged</b> against &ldquo;${esc(findings.duplication.title)}&rdquo;
+            (${Math.round((findings.duplication.overlap ?? 0) * 100)}% phrase overlap).` : ''}
+       ${(findings.unsupported ?? []).length
+         ? `<br>Unsupported after revision: ${(findings.unsupported as string[]).map((c) => esc(c)).join(' · ')}` : ''}
+       </p>`
+    : '';
+
+  const unapproved = !draft && !a.human_approved
+    ? `<p class="note"><b>No editor approved this.</b> It was published by
+       ${esc(pub?.actor ?? 'an automated process')}${pub?.note ? ` — ${esc(pub.note)}` : ''}.
+       Every other piece on this site was held until a person read it and said yes.</p>`
+    : '';
+
   const edits = (interventions ?? []).filter((i: any) => i.kind === 'human_edited');
   const editDisclosure = edits.length
     ? `<p class="note"><b>A human edited this after it was written.</b>
@@ -112,7 +152,7 @@ export async function articlePage(env: Env, req: Request, slug: string) {
     ['Identity version', esc(a.writer_version)],
     ['First thought', esc(shortDate(a.first_thought_at))],
     ['Drafted', esc(shortDate(a.drafted_at))],
-    ['Published', esc(shortDate(a.published_at))],
+    ['Published', a.published_at ? esc(shortDate(a.published_at)) : 'not published'],
     ['Sources considered', String(a.sources_considered ?? 0)],
     ['Sources cited', String(a.sources_cited ?? 0)],
     ['Human edited', a.human_edited ? 'yes' : 'no'],
@@ -127,7 +167,7 @@ export async function articlePage(env: Env, req: Request, slug: string) {
   ];
 
   return page(
-    { title: `${a.title} — WeIndie`, path: `/thoughts/${slug}`, origin,
+    { title: `${draft ? 'Draft: ' : ''}${a.title} — WeIndie`, path: `/thoughts/${a.slug}`, origin,
       description: a.standfirst || excerpt(a.body ?? '', 150) },
     `<div class="phead">
        <div class="eyebrow">${esc(w?.name ?? a.writer)} &middot; ${esc(w?.role ?? '')}</div>
@@ -140,7 +180,7 @@ export async function articlePage(env: Env, req: Request, slug: string) {
          <span>written by an AI</span>
        </div>
      </div>
-     ${block(null, 'Essay', `${editDisclosure}<div class="essay">${paragraphs(a.body ?? '')}</div>`)}
+     ${block(null, 'Essay', `${draftBanner}${unapproved}${editDisclosure}<div class="essay">${paragraphs(a.body ?? '')}</div>`)}
      ${a.counterargument ? block(null, 'The strongest objection', `
        <p class="lede">Every draft here is given the best case against it before the writer
        revises. This is that case, as it was put to ${esc(w?.name ?? a.writer)}.</p>

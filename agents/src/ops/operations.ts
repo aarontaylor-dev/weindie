@@ -110,19 +110,30 @@ async function requireArticle(env: Env, articleId: string) {
   return a;
 }
 
-export async function approveArticle(env: Env, articleId: string, note?: string, edited = false) {
+/* `actor` decides what the article's page is allowed to claim. Only a person
+   approving sets human_approved, because that field is the site's whole claim
+   about how this works — a build script setting it to demonstrate the UI would
+   be exactly the quiet dishonesty the rest of this system is built to avoid.
+   Anything published by another actor renders with a notice saying so. */
+export async function approveArticle(
+  env: Env, articleId: string, note?: string, edited = false, actor = 'human',
+) {
   const a = await requireArticle(env, articleId);
   const at = nowIso();
+  const byHuman = actor === 'human';
   await env.DB.prepare(
-    `UPDATE articles SET status='published', published_at=?, human_approved=1, human_edited=?, updated_at=?
+    `UPDATE articles SET status='published', published_at=?, human_approved=?, human_edited=?, updated_at=?
       WHERE id=?`,
-  ).bind(at, edited ? 1 : a.human_edited, at, articleId).run();
+  ).bind(at, byHuman ? 1 : 0, edited ? 1 : a.human_edited, at, articleId).run();
   await env.DB.prepare(
     `INSERT INTO publication_events (id, article_id, event, actor, note, created_at)
-     VALUES (?,?, 'published', 'human', ?, ?)`).bind(uid('pe'), articleId, note ?? null, at).run();
-  await intervene(env, articleId, edited ? 'human_edited' : 'approved_without_changes', note);
+     VALUES (?,?, 'published', ?, ?, ?)`)
+    .bind(uid('pe'), articleId, actor, note ?? null, at).run();
+  if (byHuman) {
+    await intervene(env, articleId, edited ? 'human_edited' : 'approved_without_changes', note);
+  }
   await env.WRITER.get(env.WRITER.idFromName(a.writer)).recordPublished(at);
-  return { articleId, status: 'published', slug: a.slug };
+  return { articleId, status: 'published', humanApproved: byHuman, slug: a.slug };
 }
 
 export async function rejectArticle(env: Env, articleId: string, note?: string) {
