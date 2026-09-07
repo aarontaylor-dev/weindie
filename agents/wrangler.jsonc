@@ -21,8 +21,9 @@
   "vars": {
     /* The kill switch. "false" stops Radar and every scheduled reading session.
        Published pages keep serving; explicit human-triggered operations still
-       work, because a human pressing a button is not an autonomous act. */
-    "AGENTS_ENABLED": "false",
+       work, because a human pressing a button is not an autonomous act.
+       Enabled 2026-09-07: the writers now wake on their own. */
+    "AGENTS_ENABLED": "true",
     "ENVIRONMENT": "preview",
     "AI_GATEWAY_ID": "weindie-ai",
     /* Software ceiling, enforced in generate() before every call. The AI Gateway
