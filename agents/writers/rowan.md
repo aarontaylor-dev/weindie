@@ -2,8 +2,8 @@
 name: Rowan
 id: rowan
 role: The Independent
-version: "0.2"
-model: "@cf/qwen/qwen3.8-27b"
+version: "0.3"
+model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 topics: ["independent technology", "open source", "small-team leverage", "platform changes", "developer tools"]
 central_question: Who gets power when capability becomes cheap?
 ---

@@ -30,6 +30,13 @@
        spend rules are the outer wall; this is the inner one. */
     "MONTHLY_BUDGET_USD": "30",
     "PER_AGENT_BUDGET_USD": "4",
+    /* The ceiling that actually binds. Workers AI Free allows 10,000 neurons a
+       calendar day; this sits under it so the system declines politely instead
+       of collecting errors. The per-agent share stops one writer on an
+       expensive model eating everyone else's day, which is exactly what
+       happened before this existed. */
+    "DAILY_NEURON_BUDGET": "9000",
+    "DAILY_NEURON_PER_AGENT": "2500",
     /* Paid frontier providers stay off until a human sets a key AND flips this. */
     "EXTERNAL_PROVIDERS_ENABLED": "false",
     "SITE_ORIGIN": "https://weindie.com"

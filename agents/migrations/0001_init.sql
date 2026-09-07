@@ -56,7 +56,8 @@ CREATE TABLE IF NOT EXISTS writer_reading_log (
   items_outside  INTEGER NOT NULL DEFAULT 0, -- deliberately off their beat
   outcome        TEXT NOT NULL DEFAULT 'pending',
                  -- nothing_retained | retained | thought_advanced
-                 -- | thought_abandoned | ready_to_write | error
+                 -- | thought_abandoned | ready_to_write
+                 -- | skipped_budget (declined, not a fault) | error
   note           TEXT,
   workflow_id    TEXT,
   trigger        TEXT NOT NULL DEFAULT 'schedule'

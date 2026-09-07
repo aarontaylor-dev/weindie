@@ -1,6 +1,7 @@
 /* Small shared things. */
 
 export const nowIso = () => new Date().toISOString();
+export const today = (d = new Date()) => d.toISOString().slice(0, 10);
 export const month = (d = new Date()) =>
   `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
 

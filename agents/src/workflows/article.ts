@@ -17,7 +17,7 @@ import type { Env } from '../env';
 import { ARTICLE, type WriterId, isWriterId } from '../config';
 import { identity, systemPrompt, EDITOR_PROMPT } from '../writers/identities';
 import { asSourceBlock } from '../radar/sanitise';
-import { generate, parseJson } from '../ai/generate';
+import { generate, parseJson, parseFields } from '../ai/generate';
 import { voiceCheck, asBrief, type VoiceFinding } from '../editorial/voice';
 import { nowIso, uid, slugify } from '../util';
 
@@ -148,20 +148,31 @@ Rules that override everything else:
 - You are an AI. Do not write as though you have a body or a human past.
 - Do not summarise the sources. Say the thing only you would say.
 
-Return JSON:
-{"title":"...","standfirst":"one sentence under the title","body":"the essay, plain paragraphs separated by blank lines","topic":"two or three words","confidence":"low|medium|high","beliefEffect":"reinforced|changed|new|unresolved"}` }],
-        json: true,
+Format your reply exactly like this. No JSON, no code fence:
+
+TITLE: one line
+STANDFIRST: one sentence
+TOPIC: two or three words
+CONFIDENCE: low, medium or high
+BELIEF: reinforced, changed, new or unresolved
+---
+the essay, plain paragraphs separated by blank lines` }],
       });
-      const d = parseJson<any>(res.text);
+      /* Not JSON. An essay inside a JSON string field has to survive the model
+         escaping every newline and quotation mark in it, and at this length
+         several of these models do not — which surfaces as a writer with
+         nothing to say rather than as a broken envelope. */
+      const d = parseFields(res.text, ['TITLE', 'STANDFIRST', 'TOPIC', 'CONFIDENCE', 'BELIEF']);
       if (!d?.body) throw new Error('draft produced no body');
+      const pick = (v: string | undefined, allowed: string[], fallback: string) =>
+        allowed.find(a => (v ?? '').toLowerCase().includes(a)) ?? fallback;
       return {
-        title: String(d.title ?? ctx.thought.workingIdea).slice(0, 160),
-        standfirst: String(d.standfirst ?? '').slice(0, 300),
-        body: String(d.body).slice(0, 20000),
-        topic: String(d.topic ?? '').slice(0, 60),
-        confidence: ['low', 'medium', 'high'].includes(d.confidence) ? d.confidence : 'medium',
-        beliefEffect: ['reinforced', 'changed', 'new', 'unresolved'].includes(d.beliefEffect)
-          ? d.beliefEffect : 'new',
+        title: (d.title || ctx.thought.workingIdea).slice(0, 160),
+        standfirst: (d.standfirst ?? '').slice(0, 300),
+        body: d.body.slice(0, 20000),
+        topic: (d.topic ?? '').slice(0, 60),
+        confidence: pick(d.confidence, ['low', 'medium', 'high'], 'medium'),
+        beliefEffect: pick(d.belief, ['reinforced', 'changed', 'new', 'unresolved'], 'new'),
         model: res.model, provider: res.provider,
       };
     });
@@ -298,7 +309,7 @@ State it as a case, not as advice, and do not suggest how to answer it.`,
 
       const res = await generate(env, {
         agentId: writer, task: 'revise', modelClass: 'writer', workflowId,
-        system: systemPrompt(me, 'revise'), maxTokens: ARTICLE.tokens.revise, temperature: 0.7, json: true,
+        system: systemPrompt(me, 'revise'), maxTokens: ARTICLE.tokens.revise, temperature: 0.7,
         messages: [{ role: 'user', content:
 `Your draft:
 
@@ -324,14 +335,21 @@ overturn, but you may explain why a passage does not really breach one.
 
 Keep your own argument. This is your piece.
 
-{"body":"the revised essay","changeNote":"one sentence on what you changed and why","voiceResponse":"what you did about the voice findings, or why you disagree with them — omit if there were none","confidence":"low|medium|high"}` }],
+Format your reply exactly like this. No JSON, no code fence:
+
+CHANGED: one sentence on what you changed and why
+VOICE: what you did about the voice findings, or why you disagree with them (omit this line if there were none)
+CONFIDENCE: low, medium or high
+---
+the revised essay` }],
       });
-      const r = parseJson<any>(res.text);
+      const r = parseFields(res.text, ['CHANGED', 'VOICE', 'CONFIDENCE']);
+      const conf = ['low', 'medium', 'high'].find(a => (r?.confidence ?? '').toLowerCase().includes(a));
       return {
-        body: String(r?.body ?? draft.body).slice(0, 20000),
-        changeNote: String(r?.changeNote ?? '').slice(0, 400),
-        voiceResponse: r?.voiceResponse ? String(r.voiceResponse).slice(0, 600) : null,
-        confidence: ['low', 'medium', 'high'].includes(r?.confidence) ? r.confidence : draft.confidence,
+        body: (r?.body ?? draft.body).slice(0, 20000),
+        changeNote: (r?.changed ?? '').slice(0, 400),
+        voiceResponse: r?.voice ? r.voice.slice(0, 600) : null,
+        confidence: conf ?? draft.confidence,
       };
     });
 

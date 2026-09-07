@@ -2,8 +2,8 @@
 name: Iona
 id: iona
 role: The Philosopher
-version: "0.2"
-model: "@cf/google/gemma-4-26b-a4b-it"
+version: "0.3"
+model: "@cf/openai/gpt-oss-120b"
 topics: ["human/AI collaboration", "AI research", "new interaction models", "AI agents"]
 central_question: What does all of this mean?
 ---

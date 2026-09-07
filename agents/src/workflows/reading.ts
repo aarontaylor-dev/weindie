@@ -247,10 +247,15 @@ Include only the keys that apply. For "nothing_retained", send verdict and summa
           String(o.note).slice(0, 600), at)));
       }
 
-      /* A session that failed is an error, never a decision. Only a writer
-         gets to say "nothing worth retaining". */
+      /* A session that failed is an error, never a decision — only a writer gets
+         to say "nothing worth retaining". But a session declined because the
+         day's inference allowance is spent is neither: the system did the right
+         thing, and logging it as a fault would make a correctly-behaving day
+         look broken. */
       const failed = (outcome as any).failed;
-      const outcomeCode = failed ? 'error'
+      const outcomeCode =
+        failed === 'budget' ? 'skipped_budget'
+        : failed ? 'error'
         : r.abandoned ? 'thought_abandoned'
         : r.verdict === 'ready_to_write' ? 'ready_to_write'
         : r.verdict === 'retained' ? 'retained'

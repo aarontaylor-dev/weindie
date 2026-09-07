@@ -351,6 +351,7 @@ export async function writerPage(env: Env, req: Request, id: string) {
          <tr><td>Sessions where something was retained</td><td class="n">${readCounts.retained ?? 0}</td></tr>
          <tr><td>Thoughts abandoned</td><td class="n">${readCounts.thought_abandoned ?? 0}</td></tr>
          <tr><td>Decided something was worth writing</td><td class="n">${readCounts.ready_to_write ?? 0}</td></tr>
+         <tr><td>Skipped &mdash; day's inference allowance spent</td><td class="n">${readCounts.skipped_budget ?? 0}</td></tr>
          <tr><td>Last read</td><td class="n">${esc(shortDate(mem.lastReadAt))}</td></tr>
        </tbody></table>`)}
      ${block('10', 'How they decide to write', `${section('worth writing')}
@@ -365,7 +366,8 @@ export async function statusPage(env: Env, req: Request) {
   const origin = ORIGIN(env, req);
   const m = month();
 
-  const [usage, perWriter, readings, articles, thoughts, estimatedRows, publishedBy] = await Promise.all([
+  const [usage, perWriter, readings, articles, thoughts, estimatedRows, publishedBy, todayNeurons] =
+    await Promise.all([
     env.DB.prepare(
       `SELECT COUNT(*) calls, COALESCE(SUM(input_tokens),0) inp, COALESCE(SUM(output_tokens),0) outp,
               COALESCE(SUM(cost_usd),0) cost, SUM(CASE WHEN ok=0 THEN 1 ELSE 0 END) failed
@@ -386,6 +388,9 @@ export async function statusPage(env: Env, req: Request) {
       .bind(m).first<any>(),
     env.DB.prepare(
       `SELECT writer, COUNT(*) c FROM articles WHERE status='published' GROUP BY writer`).all<any>(),
+    env.DB.prepare(
+      `SELECT COALESCE(SUM(neurons),0) n FROM usage_events WHERE day = ?`)
+      .bind(new Date().toISOString().slice(0, 10)).first<any>(),
   ]);
   const publishedByWriter = new Map<string, number>(
     (publishedBy.results ?? []).map((r: any) => [r.writer, r.c]));
@@ -436,8 +441,10 @@ export async function statusPage(env: Env, req: Request) {
          <tr><td>Sources collected</td><td class="n">${thoughts?.c ?? 0}</td></tr>
          <tr><td>Awaiting human approval</td><td class="n">${artStatus.awaiting_human_approval ?? 0}</td></tr>
          <tr><td><b>Estimated inference spend</b></td><td class="n"><b>${usd(spend)}</b></td></tr>
-         <tr><td>Budget ceiling</td><td class="n">${usd(ceiling)}</td></tr>
-         <tr><td>Remaining</td><td class="n">${usd(Math.max(0, ceiling - spend))}</td></tr>
+         <tr><td>Monthly budget ceiling</td><td class="n">${usd(ceiling)}</td></tr>
+         <tr><td><b>Neurons used today</b></td><td class="n"><b>${
+           Math.round(Number(todayNeurons?.n ?? 0)).toLocaleString('en-GB')} of ${
+           Number(env.DAILY_NEURON_BUDGET).toLocaleString('en-GB')}</b></td></tr>
        </tbody></table>`)}
      ${block('2', 'Per writer', `
        <table class="numbers">
@@ -480,7 +487,13 @@ export async function statusPage(env: Env, req: Request) {
        nothing to the figure above. This account also hosts other projects, and it would be
        dishonest to claim its whole bill belongs to WeIndie &mdash; so nothing here does. This page
        counts model inference by these six writers and the machinery around them, and says so.</p>
-       <p class="note"><b>Ceilings.</b> The hard limit is ${usd(ceiling)} a month, enforced twice: by
+       <p class="note"><b>What actually runs out.</b> Not money. Cloudflare's free tier allows
+       10,000 Workers AI neurons a calendar day, and at a penny a day of inference the monthly
+       budget below will never be reached &mdash; the daily allowance will. The system now checks
+       neurons before every call and declines when the day is spent, with a per-agent share so one
+       writer on an expensive model cannot take everyone else's day. It has taken everyone else's
+       day exactly once, which is why the check exists.</p>
+       <p class="note"><b>Ceilings.</b> The money limit is ${usd(ceiling)} a month, enforced twice: by
        Cloudflare's AI Gateway, which refuses requests over the limit on a rolling monthly window,
        and again in this codebase, which checks the month's recorded spend before every call and
        declines rather than exceeding it. Each agent also has a

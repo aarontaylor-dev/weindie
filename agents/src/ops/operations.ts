@@ -9,7 +9,8 @@ import type { Env } from '../env';
 import { agentsEnabled } from '../env';
 import { WRITER_IDS, type WriterId, isWriterId } from '../config';
 import { allIdentities, identity } from '../writers/identities';
-import { spendThisMonth } from '../ai/generate';
+import { generate, parseJson, parseFields, spendThisMonth } from '../ai/generate';
+import { systemPrompt } from '../writers/identities';
 import { nowIso, uid, isSafeId } from '../util';
 import { voiceCheck } from '../editorial/voice';
 import sourceList from '../../sources/sources.json';
@@ -171,6 +172,86 @@ export async function recordHumanEdit(env: Env, articleId: string, body: string,
     .bind(body, at, articleId).run();
   await intervene(env, articleId, 'human_edited', note);
   return { articleId, humanEdited: true, slug: a.slug };
+}
+
+/* The quality gate from the brief: strip the names off six outputs and see
+ * whether you can still tell who wrote each one.
+ *
+ * It deliberately writes nothing but usage rows. The alternative — giving each
+ * writer a thought so it could run the real article pipeline — would mean
+ * inventing memories five of them never formed, which is the one thing the
+ * seeding rules forbid. So this is a voice test, not a memory event: real
+ * identity, real model, no notebook, no article, no trace in anyone's history.
+ *
+ * No sources are supplied, so the writers are told plainly to make no factual
+ * claims. A test that invited invented citations would be testing the wrong
+ * thing and poisoning the thing it tested.
+ */
+export async function draftTest(
+  env: Env, topic: string, words = 400,
+  /* Optional per-writer model override: {"iona": "@cf/..."} tries a candidate
+     against the real identity without editing the file. Choosing a writer's
+     model by argument rather than by measurement is how two of them ended up
+     on models that cannot produce an essay at all. */
+  models: Record<string, string> = {},
+  only?: string[],
+) {
+  const one = async (me: any, attempt = 1): Promise<any> => {
+    try {
+      const res = await generate(env, {
+        agentId: me.id, task: 'draft', modelClass: 'writer',
+        modelOverride: models[me.id],
+        /* Room for a reasoning model to think and then still write. Gemma and
+           Qwen spend 1,300-1,500 tokens before their first character, so 2,200
+           produced essays that stopped mid-sentence and read as failures. */
+        maxTokens: 4000, temperature: 0.8,
+        system: systemPrompt(me, 'draft'),
+        messages: [{ role: 'user', content:
+`Someone has put this to you:
+
+  ${topic}
+
+Write roughly ${words} words in response, in your own voice, following your voice
+rules exactly. Not a summary of the statement — the thing only you would say about it.
+
+You have no sources for this one. So make no factual claims, cite nothing, invent no
+statistic, study, company or quotation. Argue from reasoning and from what you already
+think. Where you would normally want evidence, say that you would want evidence.
+
+Format your reply exactly like this. No JSON, no code fence:
+
+TITLE: your title on one line
+---
+your essay, plain paragraphs separated by blank lines` }],
+      });
+      const d = parseFields(res.text, ['TITLE']);
+      if (!d?.body) throw new Error('no body in reply');
+      return {
+        writer: me.id, name: me.name, role: me.role, model: res.model,
+        version: me.versioned,
+        title: (d.title || '(untitled)').slice(0, 160),
+        body: d.body.slice(0, 12000),
+        words: d.body.trim().split(/\s+/).filter(Boolean).length,
+        voice: await voiceCheck(env, me, d.body),
+        ok: true,
+      };
+    } catch (e: any) {
+      /* One retry. The first-run failures were transport timeouts under
+         contention and broken JSON envelopes, not writers with nothing to say. */
+      if (attempt === 1) return one(me, 2);
+      return { writer: me.id, name: me.name, role: me.role, ok: false,
+               error: String(e?.message ?? e).slice(0, 200) };
+    }
+  };
+
+  /* In threes rather than all six at once: six heavy models called in parallel
+     timed each other out. */
+  const all = allIdentities().filter(m => !only?.length || only.includes(m.id));
+  const results: any[] = [];
+  for (let i = 0; i < all.length; i += 3) {
+    results.push(...await Promise.all(all.slice(i, i + 3).map(m => one(m))));
+  }
+  return { topic, words, results };
 }
 
 /* Run the voice check over an article that already exists, changing nothing.

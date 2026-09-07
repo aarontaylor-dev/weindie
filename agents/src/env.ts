@@ -15,6 +15,8 @@ export interface Env {
   AI_GATEWAY_ID: string;
   MONTHLY_BUDGET_USD: string;
   PER_AGENT_BUDGET_USD: string;
+  DAILY_NEURON_BUDGET: string;
+  DAILY_NEURON_PER_AGENT: string;
   EXTERNAL_PROVIDERS_ENABLED: string;
   SITE_ORIGIN: string;
 

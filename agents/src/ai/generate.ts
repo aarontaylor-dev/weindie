@@ -17,11 +17,18 @@ import { BUDGET, MODELS, DEFAULT_WRITER_MODEL, type ModelClass } from '../config
 import type { Task } from '../writers/identities';
 import { IDENTITIES } from '../writers/identities';
 import { isWriterId } from '../config';
-import { uid, nowIso, month } from '../util';
+import { uid, nowIso, month, today } from '../util';
 
 export class BudgetExceeded extends Error {
-  constructor(readonly scope: 'global' | 'agent', readonly spent: number, readonly ceiling: number) {
-    super(`budget exceeded (${scope}): $${spent.toFixed(4)} of $${ceiling.toFixed(2)}`);
+  constructor(
+    readonly scope: 'global' | 'agent' | 'daily' | 'daily-agent',
+    readonly spent: number,
+    readonly ceiling: number,
+    readonly unit: 'usd' | 'neurons' = 'usd',
+  ) {
+    super(unit === 'neurons'
+      ? `budget exceeded (${scope}): ${Math.round(spent)} of ${ceiling} neurons today`
+      : `budget exceeded (${scope}): $${spent.toFixed(4)} of $${ceiling.toFixed(2)}`);
   }
 }
 
@@ -34,6 +41,9 @@ export interface GenerateOptions {
   maxTokens?: number;
   temperature?: number;
   workflowId?: string;
+  /* Try a specific model instead of the one the class resolves to. Only the
+     test harness passes this; the workflows always go through the class. */
+  modelOverride?: string;
   /* Ask for JSON. Adds an instruction and parses leniently; it does not rely on
      a provider-specific structured-output feature, because not every provider
      we might move to has one. */
@@ -95,6 +105,24 @@ function resolveModel(cls: ModelClass, agentId: string): string {
 
 /* ------------------------------------------------------------------ budget */
 
+/* Workers AI on the Free plan allows 10,000 neurons a calendar day, and that
+   is the ceiling that actually binds: a whole day of six writers reading costs
+   roughly a penny, so the monthly dollar cap will never fire. Counting dollars
+   and not neurons meant the system watched the wrong wall and walked into the
+   other one — one writer on a reasoning-heavy model spent half a day's
+   allowance in nine calls while the dollar ceiling read 0.4% used. */
+export async function neuronsToday(env: Env, agentId?: string) {
+  const d = today();
+  const row = agentId
+    ? await env.DB.prepare(
+        `SELECT COALESCE(SUM(neurons),0) AS n FROM usage_events WHERE day = ? AND agent_id = ?`,
+      ).bind(d, agentId).first<{ n: number }>()
+    : await env.DB.prepare(
+        `SELECT COALESCE(SUM(neurons),0) AS n FROM usage_events WHERE day = ?`,
+      ).bind(d).first<{ n: number }>();
+  return row?.n ?? 0;
+}
+
 export async function spendThisMonth(env: Env, agentId?: string) {
   const m = month();
   const row = agentId
@@ -108,6 +136,19 @@ export async function spendThisMonth(env: Env, agentId?: string) {
 }
 
 async function assertWithinBudget(env: Env, agentId: string) {
+  /* Daily neurons first: on the current plan this is the wall you actually hit,
+     and checking it first means the error a caller sees names the real cause. */
+  const dailyCeiling = Number(env.DAILY_NEURON_BUDGET || '9000');
+  const dailyAgentCeiling = Number(env.DAILY_NEURON_PER_AGENT || '2500');
+
+  const dayTotal = await neuronsToday(env);
+  if (dayTotal >= dailyCeiling) throw new BudgetExceeded('daily', dayTotal, dailyCeiling, 'neurons');
+
+  const dayMine = await neuronsToday(env, agentId);
+  if (dayMine >= dailyAgentCeiling) {
+    throw new BudgetExceeded('daily-agent', dayMine, dailyAgentCeiling, 'neurons');
+  }
+
   const globalCeiling = Number(env.MONTHLY_BUDGET_USD || '30');
   const agentCeiling = Number(env.PER_AGENT_BUDGET_USD || '4');
 
@@ -121,7 +162,7 @@ async function assertWithinBudget(env: Env, agentId: string) {
 /* ----------------------------------------------------------------- the call */
 
 export async function generate(env: Env, o: GenerateOptions): Promise<GenerateResult> {
-  const model = resolveModel(o.modelClass, o.agentId);
+  const model = o.modelOverride || resolveModel(o.modelClass, o.agentId);
   const provider = 'workers-ai';
   const started = Date.now();
 
@@ -181,17 +222,42 @@ export async function generate(env: Env, o: GenerateOptions): Promise<GenerateRe
      a run of failures is the thing you most want to see on /status. */
   await env.DB.prepare(
     `INSERT INTO usage_events
-       (id, created_at, month, agent_id, task_type, model_class, provider, model,
+       (id, created_at, day, month, agent_id, task_type, model_class, provider, model,
         input_tokens, output_tokens, neurons, cost_usd, duration_ms, ok, retried, error, workflow_id)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,?,?)`,
   ).bind(
-    uid('use'), nowIso(), month(), o.agentId, String(o.task), o.modelClass, provider, model,
+    uid('use'), nowIso(), today(), month(), o.agentId, String(o.task), o.modelClass, provider, model,
     inputTokens, outputTokens, neurons, costUsd, durationMs, ok ? 1 : 0, error, o.workflowId ?? null,
   ).run();
 
   if (!ok) throw new Error(`generate failed (${model}): ${error}`);
 
   return { text: stripThinking(text), model, provider, inputTokens, outputTokens, costUsd, costEstimated, durationMs };
+}
+
+/* For long prose, ask for delimited plain text rather than JSON.
+ *
+ * A 400-word essay inside a JSON string field has to survive the model escaping
+ * every newline and quotation mark in it, and at that length they frequently do
+ * not. Three of six writers failed this way on the first run of the drafting
+ * test — not because they had nothing to say, but because the envelope broke.
+ * Short structured replies stay JSON; anything carrying an essay uses this.
+ */
+export function parseFields(text: string, fields: string[]): Record<string, string> | null {
+  const out: Record<string, string> = {};
+  let rest = text.trim().replace(/^```[a-z]*\n?/i, '').replace(/```$/, '').trim();
+  for (const f of fields) {
+    const re = new RegExp('^\\s*' + f + '\\s*:\\s*(.*)$', 'im');
+    const m = re.exec(rest);
+    if (m) {
+      out[f.toLowerCase()] = m[1].trim();
+      rest = rest.slice(0, m.index) + rest.slice(m.index + m[0].length);
+    }
+  }
+  const body = rest.replace(/^\s*-{3,}\s*$/m, '').trim();
+  if (!body) return null;
+  out.body = body;
+  return out;
 }
 
 /* Models emit JSON with apologies, fences and trailing commentary. Rather than

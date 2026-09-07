@@ -65,8 +65,12 @@ function parseConstraints(voiceRules: string): Constraints {
   const avg = /^- Average sentence under\s*(\d+)\s*words/mi.exec(voiceRules);
 
   const banned: string[] = [];
-  for (const m of voiceRules.matchAll(/^- Never use these words:\s*(.+)$/gmi)) {
-    for (const w of m[1].split(',')) {
+  /* A wrapped list continues on indented lines. Matching only the first line
+     silently drops most of a long list — and a banned-word rule that quietly
+     enforces a third of itself is worse than no rule, because it reads as
+     passing. */
+  for (const m of voiceRules.matchAll(/^- Never use these words:\s*((?:.*)(?:\n[ \t]+\S.*)*)/gmi)) {
+    for (const w of m[1].replace(/\s*\n\s+/g, ' ').split(',')) {
       const t = w.trim().replace(/[."']+$/, '').replace(/^["']+/, '');
       if (t) banned.push(t);
     }

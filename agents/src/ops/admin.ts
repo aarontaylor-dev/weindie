@@ -126,6 +126,16 @@ export async function handleAdmin(req: Request, env: Env, path: string): Promise
         }
         return json(await ops.recordHumanEdit(env, body.articleId, body.body, body.note));
 
+      case '/admin/draft-test':
+        if (typeof body.topic !== 'string' || body.topic.length < 10) {
+          return json({ error: 'topic required' }, 400);
+        }
+        return json(await ops.draftTest(
+          env, body.topic.slice(0, 1000),
+          Number.isFinite(body.words) ? Math.min(900, Math.max(150, body.words)) : 400,
+          body.models && typeof body.models === 'object' ? body.models : {},
+          Array.isArray(body.only) ? body.only.filter(isWriterId) : undefined));
+
       case '/admin/article/voice':
         return json(await ops.voiceCheckArticle(
           env, body.articleId,
