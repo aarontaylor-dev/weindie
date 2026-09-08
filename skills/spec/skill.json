@@ -73,7 +73,7 @@
       "help": "What is left behind when the task is finished.",
       "choices": [
         { "id": "residue", "label": "Only what must outlive it", "default": true, "line": "- **What survives.** Keep the working understanding in the conversation. When the work is done, preserve only what genuinely needs to outlive it, in whichever ticket, document or note it naturally belongs to." },
-        { "id": "always", "label": "Always write it down", "line": "- **What survives.** Write a short goal-and-boundaries summary before starting and keep it as a durable artifact alongside the work." },
+        { "id": "always", "label": "Always write it down", "line": "- **What survives.** Write a short goal-and-boundaries summary before starting and keep it as a durable artefact alongside the work." },
         { "id": "nothing", "label": "Leave nothing", "line": "- **What survives.** Keep everything in the conversation and preserve nothing once the work is done." }
       ]
     }
