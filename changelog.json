@@ -1,6 +1,17 @@
 {
   "entries": [
     {
+      "date": "2026-09-08",
+      "site": "1.2.1",
+      "skills": { "ship": "0.2" },
+      "title": "/ship stops hedging",
+      "body": [
+        "/ship separated what had been verified from what was being assumed, but only requirement by requirement. A single sentence could still carry both. \"The upload limit should be enforced\" reads as a pass, and a later reader cannot tell whether should means measured or means guessed \u2014 which makes a hedge the worst available place to put uncertainty. It degrades the sentence and it is unaccountable afterwards.",
+        "There is now one more line in the reporting section: do not hedge, and resolve a qualified claim into verified or believed. A notation for confidence was considered and left out. A plain sentence carrying the same fact does the same work, and a scale invites a number where nothing was measured.",
+        "The page of things deliberately not built gains an entry, on the strongest candidate for a fifth skill so far: a route rather than a territory \u2014 what an agent actually needs to pass through, instead of the whole repository. It is untested, and the other four ask a question and return a verdict where that one would produce a document. It is recorded rather than shipped."
+      ]
+    },
+    {
       "date": "2026-09-03",
       "site": "1.2",
       "title": "A way in",

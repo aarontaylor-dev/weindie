@@ -3,7 +3,7 @@ name: ship
 description: Decide whether the evidence actually supports calling the work complete.
 license: MIT
 metadata:
-  version: "0.1"
+  version: "0.2"
   source: https://weindie.com/ship
 ---
 
@@ -46,6 +46,8 @@ a caveat to look thorough.
 ## Reporting
 
 - Distinguish "verified" from "believed" in plain words.
+- Do not hedge. "Should work" reads as verified without being verified.
+  A reader cannot tell which a hedge means, so resolve it: verified, or believed.
 - Quote real evidence — a failing test's output beats a summary of it.
 - Name the smallest thing that would close each gap.
 - Never report a check as passing if it was skipped, or did not run.
