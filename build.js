@@ -317,7 +317,7 @@ const FOOT_LINKS = [
 
 const FOOTER = `<footer class="wrap"><div class="foot">\
 <b>weindie</b>\
-<span>Independent tools for navigating work with AI.</span>\
+<span>Four small skills for working with AI.</span>\
 <span>v${changelog.siteVersion} &middot; early and evolving</span>\
 <span><a href="/LICENSE.txt">MIT licensed</a></span>\
 </div><div class="foot2">${FOOT_LINKS}</div></footer>`;
@@ -348,7 +348,7 @@ function skillPage(s, all, label) {
         <div class="btnrow"><button class="btn primary" id="copyTry">Copy prompt</button></div>
         <p class="small" style="margin-top:16px">A short, portable version. The installed skill carries the fuller behaviour &mdash; when to stay quiet, how to report, what not to flag &mdash; and neither needs your AI to be able to read this page.</p>`;
 
-  const when = `<p class="lede">A skill that fires on everything stops meaning anything. <code>/${esc(s.slug)}</code> is allowed to find nothing.</p>
+  const when = `<p class="lede"><code>/${esc(s.slug)}</code> is allowed to find nothing.</p>
         <div class="two">
           <div><h3>Useful when</h3><ul>${li(s.usefulWhen)}</ul></div>
           <div><h3>Probably not needed when</h3><ul>${li(s.notNeededWhen)}</ul></div>
@@ -492,7 +492,7 @@ function ogCard(s, label) {
 }
 
 function homeCard(skills) {
-  return card(`<div class="eyebrow">We are independent</div>
+  return card(`<div class="eyebrow">Four small skills</div>
   <h1>Skills you can read before you run them.</h1>
   <div class="sum">Small, plain-text skills for working with AI.</div>
   <div class="spacer"></div>
