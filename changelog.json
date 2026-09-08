@@ -2,6 +2,17 @@
   "entries": [
     {
       "date": "2026-09-08",
+      "site": "1.2.2",
+      "title": "The copy stops arguing",
+      "body": [
+        "Nearly every claim on this site was built as an antithesis \u2014 X rather than Y, X not Y, not just Y. There were about thirty. The shape earns its place in a SKILL.md, where \"believed rather than verified\" is defining a term and the precision is the whole point. In the copy around the skills it did something else. It gave every sentence an opponent, and the opponent was never named.",
+        "\"A skill that fires on everything stops meaning anything. There are four.\" rendered seven times, including directly above the Useful when lists on every skill page. Someone who arrived at /kiss to find out what /kiss does was met first with a proposition about catalogue restraint. It now appears once, on the page of things not built, where it explains a refusal. The skill pages keep the line that was already doing the work: /kiss is allowed to find nothing.",
+        "The homepage eyebrow led with a stance where it could have led with an offer, and the claim that a licence is a permission was made three times in three shapes. Those are gone, along with an instruction to the reader about what to install. The page of things not built loses three pieces of self-praise, among them \"it is a simple thing being honest about being simple\" \u2014 a sentence that undoes itself, because narrating restraint is not restraint.",
+        "Two dry lines were kept: a more impressive way to be wrong, and a list you do not mail is worse than no list. Both are aimed at this site rather than at anyone else. One spelling was normalised to artefact, the last American form on the site. These entries are untouched \u2014 they are dated records of what was thought at the time, and rewriting them backwards would make them worth less."
+      ]
+    },
+    {
+      "date": "2026-09-08",
       "site": "1.2.1",
       "skills": { "ship": "0.2" },
       "title": "/ship stops hedging",
