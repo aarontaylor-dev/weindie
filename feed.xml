@@ -5,9 +5,19 @@
   <id>https://weindie.com/feed.xml</id>
   <link rel="self" type="application/atom+xml" href="https://weindie.com/feed.xml"/>
   <link rel="alternate" type="text/html" href="https://weindie.com/changelog"/>
-  <updated>2026-09-03T00:00:00Z</updated>
+  <updated>2026-09-08T00:00:00Z</updated>
   <author><name>WeIndie</name></author>
   <rights>MIT</rights>
+  <entry>
+    <title>/ship stops hedging</title>
+    <id>https://weindie.com/changelog#2026-09-08-v1-2-1</id>
+    <link rel="alternate" type="text/html" href="https://weindie.com/changelog#2026-09-08-v1-2-1"/>
+    <updated>2026-09-08T00:00:00Z</updated>
+    <published>2026-09-08T00:00:00Z</published>
+    <category term="/ship"/>
+    <category term="site"/>
+    <content type="html">&lt;p&gt;/ship separated what had been verified from what was being assumed, but only requirement by requirement. A single sentence could still carry both. &amp;quot;The upload limit should be enforced&amp;quot; reads as a pass, and a later reader cannot tell whether should means measured or means guessed — which makes a hedge the worst available place to put uncertainty. It degrades the sentence and it is unaccountable afterwards.&lt;/p&gt;&lt;p&gt;There is now one more line in the reporting section: do not hedge, and resolve a qualified claim into verified or believed. A notation for confidence was considered and left out. A plain sentence carrying the same fact does the same work, and a scale invites a number where nothing was measured.&lt;/p&gt;&lt;p&gt;The page of things deliberately not built gains an entry, on the strongest candidate for a fifth skill so far: a route rather than a territory — what an agent actually needs to pass through, instead of the whole repository. It is untested, and the other four ask a question and return a verdict where that one would produce a document. It is recorded rather than shipped.&lt;/p&gt;</content>
+  </entry>
   <entry>
     <title>A way in</title>
     <id>https://weindie.com/changelog#2026-09-03-v1-2</id>
