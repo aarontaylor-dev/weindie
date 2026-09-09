@@ -16,6 +16,29 @@ which it does not, so the label was a claim a reader could not check, and
 "spec-first" already means something else in API design. The field is kept for
 the day that changes; setting it is one line and the build does the rest.
 
+## Using a skill
+
+A skill is one `SKILL.md` file. Its page on the site has a prompt you can paste
+into a conversation to try the idea once, and the file itself when you want to
+keep it. The download goes in a folder named after the skill:
+
+    .claude/skills/kiss/SKILL.md      Claude Code, one project
+    ~/.claude/skills/kiss/SKILL.md    Claude Code, all your projects
+
+Cursor reads `.cursor/skills/`, Codex and the specification `.agents/skills/`.
+Each page gives the path for the environment you pick, and a command that puts
+the file there:
+
+    mkdir -p .claude/skills/kiss && curl -fsSL https://weindie.com/kiss/SKILL.md -o .claude/skills/kiss/SKILL.md
+
+The frontmatter says which copy you are holding: `name` matches the folder,
+`metadata.version` and `metadata.source` give the version and the page it came
+from, and `based_on` appears only on a customised download.
+
+Changing a skill is editing the file. The bullets under "Defaults you can
+change" are the lines written to be swapped — the customise controls on the page
+do exactly that, and by hand nothing stops you at those lines.
+
 ## The model
 
     canonical skill  +  platform packaging  =  platform download
