@@ -237,5 +237,5 @@ without needing to be traced back here.
 `LICENSE.txt` rather than `LICENSE` so the same file is both recognised by GitHub
 and served as readable text at <https://weindie.com/LICENSE.txt>.
 
-The copyright line names **WeIndie**. Change it to a legal name if you would
-rather the licence identify a person or company.
+The copyright line names **Aaron Taylor**, so the grant has an identifiable
+holder. A fork should put its own name there.
