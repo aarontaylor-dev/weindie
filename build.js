@@ -33,6 +33,10 @@ const ISSUES = REPO + '/issues';
    every commit in this public repository, so forwarding hi@weindie.com to it
    would protect nothing and cost a working mail setup. Empty disables the line. */
 const CONTACT = 'hi@aarontaylor.me';
+/* The author's index of the other work. It links down to weindie; without this
+   the link only goes one way, and a set of sites with one-way links reads as a
+   set of unrelated sites. */
+const HUB = 'https://aarontaylor.me';
 const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
 /* Only touch a file when its contents actually change, so mtimes stay meaningful
    (the PNG step below compares them) and rebuilds produce no spurious diffs. */
@@ -612,13 +616,16 @@ ${entries.map(entryXml).join('\n')}
 `;
 }
 
-/* The same three doors as the footer, with room to say what each one is for.
+/* The footer's doors, with room to say what each one is for — plus the one that
+   only earns a line here: weindie is one of several things by the same author,
+   and the hub is the only page that lists the others.
    Keys stay short: the index reserves 130px for them. */
 const DOORS = [
   [REPO, 'Source', 'github.com/aarontaylor-dev/weindie'],
   [ISSUES + '/new', 'Report', 'A skill misfired, or a page here is wrong'],
   ['/changelog', 'Changelog', 'What changed, and when'],
   ['/not-built', 'Not built', 'What was considered and deliberately left out'],
+  [HUB, 'Elsewhere', 'The rest of the work — aarontaylor.me'],
   CONTACT ? ['mailto:' + CONTACT, 'Email', CONTACT] : null
 ].filter(Boolean).map(([href, k, q]) =>
   `<a href="${esc(href)}"><span class="k">${esc(k)}</span><span class="q">${esc(q)}</span></a>`).join('');

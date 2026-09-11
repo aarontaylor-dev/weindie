@@ -1,6 +1,16 @@
 {
   "entries": [
     {
+      "date": "2026-09-11",
+      "site": "1.2.3",
+      "title": "One of several things",
+      "body": [
+        "Section 3 said WeIndie was \u201ca small, independent workbench for trying practical ways of working with them\u201d. A workbench is a claim about what a place could hold, and this site holds four skills \u2014 it has held four skills for as long as it has existed. The gap was small and it decided how the page was read: arrive at an umbrella, look for the other things under it, find none, and conclude the work is thinner than it is. The section now opens by saying what the site is rather than what kind of place it is. Four skills, not a framework, not a methodology, and not tied to one model or vendor.",
+        "The other half of the same problem was that the links only went one way. The author's index at aarontaylor.me lists this site among the things it indexes, and nothing here pointed back, so a visitor who wondered whether this was all there was had no way to find out. Section 4 gains an Elsewhere row. It is one line in the list of doors and the shortest available answer to the question.",
+        "Considered and not done: moving the skills to /skills/ and making this domain an index of its own. It would have changed eight URLs, left the metadata.source line wrong in every SKILL.md already installed somewhere, and produced a second index listing the same work as the first. A short URL that survives being pasted into a conversation is most of what this site is for, and an index already exists elsewhere."
+      ]
+    },
+    {
       "date": "2026-09-08",
       "site": "1.2.2",
       "title": "The copy stops arguing",
