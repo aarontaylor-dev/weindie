@@ -386,6 +386,13 @@ footer{border-top:2px solid var(--ink);margin-top:64px;padding:20px 0 56px}
       <p class="lede">Every skill carries a version in its frontmatter. This is the record of what moved between those versions, and what changed about the site itself.</p>
       <p class="small">There is no schedule. Entries appear when something actually changes, and the build refuses to run if a skill&rsquo;s version has moved without one. <a href="/feed.xml">Follow by feed</a> &mdash; a plain Atom file, nothing to sign up for.</p>
     </div>
+    <section class="blk entry" id="2026-09-11-v1-2-4">
+      <div class="rail"><div class="n">2026-09-11</div><h2>v1.2.4</h2></div>
+      <div class="body">
+        <h3>Where /spec came from</h3>
+        <div class="prose"><p>spec-first.com redirects here, to /spec, and until now the page said nothing about why. Spec First was a development method — problem, scope, domain, behaviour, tests, then code, with the behaviour written as Gherkin .feature files — and it is retired. Someone following that redirect arrived at a skill with no idea what had happened to the thing they were looking for. /spec gains a short section at the end saying it: what the method was, what /spec kept from it, and where the full method is still practised.</p><p>It is an appendix rather than a step, and it is on the page rather than in the file. The skill itself is unchanged and still at v0.2. A downloaded SKILL.md does not need to carry the history of a method it no longer belongs to, and the partOf label stays unset — the point of that field is to name a method a reader can go and check, which is exactly what this one no longer is.</p><p>The README had the same gap twice. It opened by calling this a workbench for practical AI work, which is a claim about what a place could hold rather than what it holds, and its note on partOf said the method had nowhere public to point at when what is true is that the method was retired. Both now say the shorter thing. The new provenance block is documented alongside the checks the build already makes, because it is held to the same standard: a section that exists has to say something.</p></div>
+      </div>
+    </section>
     <section class="blk entry" id="2026-09-11-v1-2-3">
       <div class="rail"><div class="n">2026-09-11</div><h2>v1.2.3</h2></div>
       <div class="body">
@@ -436,7 +443,7 @@ footer{border-top:2px solid var(--ink);margin-top:64px;padding:20px 0 56px}
       </div>
     </section>
   </main>
-  <footer class="wrap"><div class="foot"><b>weindie</b><span>Four small skills for working with AI.</span><span>v1.2.3 &middot; early and evolving</span><span><a href="/LICENSE.txt">MIT licensed</a></span></div><div class="foot2"><a href="https://github.com/aarontaylor-dev/weindie">Source on GitHub</a>&nbsp;&middot; <a href="https://github.com/aarontaylor-dev/weindie/issues/new">Report a problem</a>&nbsp;&middot; <a href="/changelog">Changelog</a>&nbsp;&middot; <a href="mailto:hi@aarontaylor.me">hi@aarontaylor.me</a></div></footer>
+  <footer class="wrap"><div class="foot"><b>weindie</b><span>Four small skills for working with AI.</span><span>v1.2.4 &middot; early and evolving</span><span><a href="/LICENSE.txt">MIT licensed</a></span></div><div class="foot2"><a href="https://github.com/aarontaylor-dev/weindie">Source on GitHub</a>&nbsp;&middot; <a href="https://github.com/aarontaylor-dev/weindie/issues/new">Report a problem</a>&nbsp;&middot; <a href="/changelog">Changelog</a>&nbsp;&middot; <a href="mailto:hi@aarontaylor.me">hi@aarontaylor.me</a></div></footer>
   <script>(function(){
   var btn=document.getElementById('theme');if(!btn)return;
   var root=document.documentElement, label=btn.querySelector('.vh'), t;

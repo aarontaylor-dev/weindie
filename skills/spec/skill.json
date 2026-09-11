@@ -33,6 +33,16 @@
     "The goal was established earlier in the same conversation.",
     "Asking would cost more than trying it and adjusting."
   ],
+  "provenance": {
+    "body": [
+      "Spec First was a development method: work moved through problem, scope, domain, behaviour, tests, then code, with the behaviour written as Gherkin .feature files a machine could read. It was public for seven months and is now retired. What it got right was the first step \u2014 that most disappointing work is not badly executed, it is well executed against a goal nobody established \u2014 and that step turned out not to be about software at all.",
+      "/spec is that step on its own, at the size of a conversation: no directory, no file format, no stages to adopt, just the check that both sides understand the same thing before the work starts. Spec First's own address, spec-first.com, now points at this page."
+    ],
+    "links": [
+      ["https://year.tools", "year.tools", "The full method, still practised \u2014 its spec/ directory is public"],
+      ["https://notes.aarontaylor.me/note/002/", "Note 002", "Why Spec First was retired rather than renamed"]
+    ]
+  },
   "match": [
     "vague", "unclear", "not sure", "what should", "goal", "requirements",
     "understand", "idea", "ambiguous", "before i start", "where to start",

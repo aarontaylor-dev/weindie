@@ -2,19 +2,29 @@
 
 Source for [weindie.com](https://weindie.com).
 
-WeIndie is a small independent workbench for practical AI work. The site explains
-what WeIndie is, and gives each skill (`/spec`, `/drift`, `/kiss`, `/ship`) a
-page you can send to someone.
+WeIndie is four skills for working with AI. The site explains what each one is
+for, and gives each skill (`/spec`, `/drift`, `/kiss`, `/ship`) a page you can
+send to someone.
 
 The set is deliberately *not* named after one of its members, and all four are
 labelled simply as WeIndie skills.
 
 `skill.json` has an optional `partOf` field that overrides that label, for a
-skill that belongs to a named method. It is currently unused. `/spec` carried
-`partOf: Spec First` until that method had somewhere public to point at —
-which it does not, so the label was a claim a reader could not check, and
+skill that belongs to a named method. It is unused, and on current evidence it
+stays that way: `/spec` carried `partOf: Spec First` until that method was
+**retired**. It is not merely unpublished — there is no public artefact to
+point a reader at, so the label was a claim nobody could check, and
 "spec-first" already means something else in API design. The field is kept for
-the day that changes; setting it is one line and the build does the rest.
+the day a skill belongs to a method that is actually live; setting it is one
+line and the build does the rest.
+
+What `/spec` did keep from that method is said on the page instead, in the
+optional `provenance` block in `skill.json` — a short account of where the
+skill came from, rendered as an unnumbered section after the source. It exists
+because `spec-first.com` now redirects to `/spec`, and a reader who follows
+that redirect would otherwise land on a skill with no idea why. Only `/spec`
+has one, and the build checks that a `provenance` block that exists actually
+says something.
 
 ## Using a skill
 
@@ -105,6 +115,8 @@ The build refuses to run if a skill is inconsistent. It checks that:
 - no non-default option line appears in SKILL.md
 - the bullets under "Defaults you can change" correspond one-to-one with the
   options in `skill.json`
+- a `provenance` block, where one exists, has at least one non-empty paragraph
+  and links that carry all three of a href, a key and a description
 
 That last set is what keeps customisation honest: the browser generates a custom
 skill by replacing those exact lines, so if the text drifts apart the build stops
