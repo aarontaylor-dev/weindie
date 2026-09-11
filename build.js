@@ -142,6 +142,17 @@ function loadSkill(slug) {
   }
   if (defaults.length !== bullets.length) fail(where + ': skill.json has ' + defaults.length + ' options but SKILL.md lists ' + bullets.length + ' adjustable bullets');
 
+  /* Optional, and held to the same standard as everything else: a section that
+     exists but says nothing is worse than no section. */
+  if (meta.provenance) {
+    const body = meta.provenance.body;
+    if (!Array.isArray(body) || !body.length || body.some(t => !String(t).trim()))
+      fail(where + ': provenance needs at least one non-empty paragraph');
+    for (const l of meta.provenance.links || [])
+      if (!Array.isArray(l) || l.length !== 3 || l.some(t => !String(t).trim()))
+        fail(where + ': each provenance link needs a href, a short key and a description');
+  }
+
   return Object.assign({}, meta, {
     slug, canonical, defaultsNote, version, source,
     description: fm.description,
@@ -390,6 +401,15 @@ function skillPage(s, all, label) {
         <pre class="code">${esc(s.canonical)}</pre>
         <div class="btnrow"><button class="btn" id="copySource">Copy SKILL.md</button><a class="btn" href="/${esc(s.slug)}/SKILL.md">Open raw file</a></div>`;
 
+  /* Only /spec has this so far. Its method was retired, and that method's own
+     address now lands on this page \u2014 so a reader who followed the redirect
+     arrives at a skill with no idea why. It is an appendix rather than a
+     numbered step: the page's reading order ends at owning the file. */
+  const provenance = !s.provenance ? '' : block(null, 'Where this came from',
+    `${s.provenance.body.map(t => `<p class="lede">${esc(t)}</p>`).join('')}
+        <div class="index">${(s.provenance.links || []).map(([href, k, q]) =>
+          `<a href="${esc(href)}"><span class="k">${esc(k)}</span><span class="q">${esc(q)}</span></a>`).join('')}</div>`) + '\n    ';
+
   const more = `<div class="index">${others.map(o =>
           `<a href="/${o.slug}"><span class="k">/${o.slug}</span><span class="q">${esc(o.question)}</span></a>`).join('')}</div>`;
 
@@ -415,7 +435,7 @@ function skillPage(s, all, label) {
         <a href="#try-once">Try it once</a>
         <a href="#install">Install</a>
         <a href="#make-it-yours">Make it yours</a>
-        <a href="#skill-source">SKILL.md</a>
+        <a href="#skill-source">SKILL.md</a>${s.provenance ? '\n        <a href="#where-this-came-from">Where this came from</a>' : ''}
       </div>
       <p class="crumbs">Sent this link by someone? <code>/${esc(s.slug)}</code> is a skill you can add to an AI tool &mdash; or just try the prompt below in a conversation you already have open.</p>
     </div>
@@ -425,7 +445,7 @@ function skillPage(s, all, label) {
     ${block(4, 'Install', install)}
     ${block(5, 'Make it yours', custom)}
     ${block(6, 'Skill source', source)}
-    ${block(null, 'Other skills', more)}
+    ${provenance}${block(null, 'Other skills', more)}
   </main>
   ${FOOTER}
   <script>window.SKILL=${json({

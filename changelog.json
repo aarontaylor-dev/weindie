@@ -2,6 +2,16 @@
   "entries": [
     {
       "date": "2026-09-11",
+      "site": "1.2.4",
+      "title": "Where /spec came from",
+      "body": [
+        "spec-first.com redirects here, to /spec, and until now the page said nothing about why. Spec First was a development method \u2014 problem, scope, domain, behaviour, tests, then code, with the behaviour written as Gherkin .feature files \u2014 and it is retired. Someone following that redirect arrived at a skill with no idea what had happened to the thing they were looking for. /spec gains a short section at the end saying it: what the method was, what /spec kept from it, and where the full method is still practised.",
+        "It is an appendix rather than a step, and it is on the page rather than in the file. The skill itself is unchanged and still at v0.2. A downloaded SKILL.md does not need to carry the history of a method it no longer belongs to, and the partOf label stays unset \u2014 the point of that field is to name a method a reader can go and check, which is exactly what this one no longer is.",
+        "The README had the same gap twice. It opened by calling this a workbench for practical AI work, which is a claim about what a place could hold rather than what it holds, and its note on partOf said the method had nowhere public to point at when what is true is that the method was retired. Both now say the shorter thing. The new provenance block is documented alongside the checks the build already makes, because it is held to the same standard: a section that exists has to say something."
+      ]
+    },
+    {
+      "date": "2026-09-11",
       "site": "1.2.3",
       "title": "One of several things",
       "body": [

@@ -9,6 +9,15 @@
   <author><name>WeIndie</name></author>
   <rights>MIT</rights>
   <entry>
+    <title>Where /spec came from</title>
+    <id>https://weindie.com/changelog#2026-09-11-v1-2-4</id>
+    <link rel="alternate" type="text/html" href="https://weindie.com/changelog#2026-09-11-v1-2-4"/>
+    <updated>2026-09-11T00:00:00Z</updated>
+    <published>2026-09-11T00:00:00Z</published>
+    <category term="site"/>
+    <content type="html">&lt;p&gt;spec-first.com redirects here, to /spec, and until now the page said nothing about why. Spec First was a development method — problem, scope, domain, behaviour, tests, then code, with the behaviour written as Gherkin .feature files — and it is retired. Someone following that redirect arrived at a skill with no idea what had happened to the thing they were looking for. /spec gains a short section at the end saying it: what the method was, what /spec kept from it, and where the full method is still practised.&lt;/p&gt;&lt;p&gt;It is an appendix rather than a step, and it is on the page rather than in the file. The skill itself is unchanged and still at v0.2. A downloaded SKILL.md does not need to carry the history of a method it no longer belongs to, and the partOf label stays unset — the point of that field is to name a method a reader can go and check, which is exactly what this one no longer is.&lt;/p&gt;&lt;p&gt;The README had the same gap twice. It opened by calling this a workbench for practical AI work, which is a claim about what a place could hold rather than what it holds, and its note on partOf said the method had nowhere public to point at when what is true is that the method was retired. Both now say the shorter thing. The new provenance block is documented alongside the checks the build already makes, because it is held to the same standard: a section that exists has to say something.&lt;/p&gt;</content>
+  </entry>
+  <entry>
     <title>One of several things</title>
     <id>https://weindie.com/changelog#2026-09-11-v1-2-3</id>
     <link rel="alternate" type="text/html" href="https://weindie.com/changelog#2026-09-11-v1-2-3"/>
